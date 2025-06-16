@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Vòng quay may mắn</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      background: #f0f8ff;
+      padding-top: 50px;
+    }
+
+    h1 {
+      color: #e91e63;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: auto;
+      border-radius: 50%;
+      border: 10px solid #333;
+      overflow: hidden;
+    }
+
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      transition: transform 5s ease-out;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 40px solid red;
+    }
+
+    #spin {
+      margin-top: 30px;
+      padding: 15px 30px;
+      font-size: 20px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 24px;
+      color: blue;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎯 Hôm nay ăn gì 🎯</h1>
+  <div class="wheel-container">
+    <div class="pointer"></div>
+    <canvas id="wheel" class="wheel" width="300" height="300"></canvas>
+  </div>
+
+  <button id="spin">Quay!</button>
+  <div id="result"></div>
+
+  <script>
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const resultDiv = document.getElementById('result');
+    const spinButton = document.getElementById('spin');
+
+    const prizes = ["KingBBQ", "KiKi", "Kichi", "Chicken Plus", "Gogi", "Sumo", "Cuu Van Long", "JS"];
+    const colors = ["#ffb300", "#8bc34a", "#03a9f4", "#e91e63", "#ff5722", "#9c27b0", "#00bcd4", "#ffc107"];
+    const arc = Math.PI * 2 / prizes.length;
+
+    function drawWheel() {
+      for (let i = 0; i < prizes.length; i++) {
+        const angle = i * arc;
+        ctx.beginPath();
+        ctx.fillStyle = colors[i];
+        ctx.moveTo(150, 150);
+        ctx.arc(150, 150, 150, angle, angle + arc);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(150, 150);
+        ctx.rotate(angle + arc / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px sans-serif";
+        ctx.fillText(prizes[i], 140, 10);
+        ctx.restore();
+      }
+    }
+
+    drawWheel();
+
+    let rotating = false;
+    let angle = 0;
+
+    spinButton.onclick = function () {
+      if (rotating) return;
+
+      rotating = true;
+      const randomIndex = Math.floor(Math.random() * prizes.length);
+      const stopAngle = (3 * Math.PI / 2) - (randomIndex * arc) - arc / 2;
+      const spins = 6; // số vòng quay
+      const target = (spins * 2 * Math.PI) + stopAngle;
+
+      let start = null;
+      const duration = 5000;
+
+      function animate(timestamp) {
+        if (!start) start = timestamp;
+        const progress = timestamp - start;
+        const eased = easeOut(progress / duration);
+
+        angle = eased * target;
+        ctx.clearRect(0, 0, 300, 300);
+        ctx.save();
+        ctx.translate(150, 150);
+        ctx.rotate(angle);
+        ctx.translate(-150, -150);
+        drawWheel();
+        ctx.restore();
+
+        if (progress < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          resultDiv.innerText = `🎉 Hôm nay sẽ ăn ${prizes[randomIndex]}!`;
+          rotating = false;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    };
+
+    function easeOut(t) {
+      return (--t) * t * t + 1;
+    }
+  </script>
+</body>
+</html>
